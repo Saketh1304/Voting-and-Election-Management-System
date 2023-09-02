@@ -1,0 +1,754 @@
+#include <bits/stdc++.h>
+#include <conio.h>
+#include <string>
+#include <sstream>
+using namespace std;
+struct node
+{
+ string name;
+ string voter_id;
+ int age;
+ string sex;
+ string voted;
+ string address;
+ struct node *next;
+ struct node *prev;
+};
+class voter
+{
+ struct node *head = NULL;
+ struct node *tail = NULL;
+public:
+ voter()
+ {
+ FILE *f = fopen("voter_list.csv", "r");
+ if (f == NULL)
+ {
+ f = fopen("voter_list.csv", "a");
+ }
+ fclose(f);
+ ifstream file;
+ file.open("voter_list.csv");
+ string line;
+ while (!file.eof())
+ {
+ string s;
+ getline(file, line);
+ line.push_back(',');
+ if (line != ",")
+ {
+ vector<string> v;
+ for (int i = 0; i < line.length(); i++)
+ {
+ if (line[i] != ',')
+ {
+ s.push_back(line[i]);
+ }
+ else
+ {
+ v.push_back(s);
+ s = "";
+ }
+ }
+ struct node *ptr = new struct node;
+ ptr->next = NULL;
+ ptr->prev = NULL;
+ ptr->name = v[0];
+ ptr->voter_id = v[1];
+ ptr->sex = v[2];
+ ptr->voted = v[3];
+ ptr->address = v[4];
+ stringstream obj;
+ obj << v[5];
+ obj >> ptr->age;
+ if (head == NULL)
+ {
+ head = ptr;
+ tail = ptr;
+ }
+ else
+ {
+ tail->next = ptr;
+ ptr->prev = tail;
+ tail = ptr;
+ }
+ line = "";
+ }
+ }
+ file.close();
+ }
+ void outtofile()
+ {
+ ofstream file;
+ file.open("voter_list1.csv");
+ node *ptr = head;
+ while (ptr != tail)
+ {
+ file << ptr->name << "," << ptr->voter_id << "," << ptr->sex << "," << ptr-
+>voted << "," << ptr->address << "," << ptr->age << "\n";
+ ptr = ptr->next;
+ }
+ if (ptr != NULL)
+ file << ptr->name << "," << ptr->voter_id << "," << ptr->sex << "," << ptr-
+>voted << "," << ptr->address << "," << ptr->age;
+ file.close();
+ remove("voter_list.csv");
+ rename("voter_list1.csv", "voter_list.csv");
+ }
+ struct node *search_voter(string id)
+ {
+ struct node *ptr = head;
+ while (ptr != NULL)
+ {
+ if (ptr->voter_id == id)
+ {
+ return ptr;
+ }
+ ptr = ptr->next;
+ }
+ return NULL;
+ }
+ void add_voter()
+ {
+ string name, id, sex, address;
+ int age = 0;
+ cout << "\nENTER NAME: ";
+ cin >> name;
+ cout << "ENTER VOTER ID: ";
+ cin >> id;
+ if (search_voter(id) == NULL)
+ {
+ cout << "ENTER AGE: ";
+ b:
+ char c = getch();
+ if (c >= '1' && c <= '9')
+ {
+ cout << c;
+ age = age + (int(c) - 48);
+ a:
+ char ch = getch();
+ if (((int(c) - 48) * 10) + (int(ch) - 48) >= 18 && ((int(c) - 48) * 10) + 
+(int(ch) -
+ 48) <=
+ 99)
+ {
+ cout << ch;
+ age = (age * 10) + (int(ch) - 48);
+ }
+ else
+ {
+ goto a;
+ }
+ }
+ else
+ {
+ goto b;
+ }
+ cout << "\nENTER SEX: ";
+ while (1)
+ {
+ char c = getch();
+ if (c == 'M' || c == 'F' || c == 'O')
+ {
+ cout << c;
+ sex = c;
+ break;
+ }
+ }
+ cout << "\nENTER ADDRESS: ";
+ cin >> address;
+ struct node *ptr = new node();
+ ptr->next = NULL;
+ ptr->prev = NULL;
+ ptr->name = name;
+ ptr->sex = sex;
+ ptr->voted = "N";
+ ptr->voter_id = id;
+ ptr->address = address;
+ ptr->age = age;
+ if (head == NULL)
+ {
+ head = ptr;
+ tail = ptr;
+ }
+ else
+ {
+ tail->next = ptr;
+ ptr->prev = tail;
+ tail = ptr;
+ }
+ outtofile();
+ }
+ else
+ {
+ cout << "Voter already exists (duplicate voter id found) !";
+ }
+ }
+ void delete_voter(string s)
+ {
+ if (search_voter(s) == NULL)
+ {
+ cout << "No voter found";
+ }
+ else
+ {
+ if (search_voter(s) == head)
+ {
+ if (head->next != NULL)
+ {
+ head = head->next;
+ struct node *p = head->prev;
+ head->prev = NULL;
+ delete p;
+ }
+ else
+ {
+ delete head;
+ head = NULL;
+ tail = NULL;
+ }
+ }
+ else if (search_voter(s) == tail)
+ {
+ tail = tail->prev;
+ struct node *p = tail->next;
+ tail->next = NULL;
+ delete p;
+ }
+ else
+ {
+ node *p = search_voter(s);
+ search_voter(s)->next->prev = search_voter(s)->prev;
+ search_voter(s)->prev->next = search_voter(s)->next;
+ delete p;
+ }
+ }
+ outtofile();
+ }
+ void update_voter()
+ {
+ string id;
+ cout << "\nENTER VOTER ID TO UPDATE: ";
+ cin >> id;
+ if (search_voter(id) != NULL)
+ {
+ int c;
+ cout << "1.name 2.address 3.sex 4.age\n";
+ cout << "enter choice : ";
+ uv:
+ char ch = getch();
+ if (ch == '1' || ch == '2' || ch == '3' || ch == '4')
+ {
+ cout << ch;
+ c = int(ch) - 48;
+ }
+ else
+ {
+ system("CLS");
+ goto uv;
+ }
+ if (c == 1)
+ {
+ string name;
+ cout << "\nenter new name: ";
+ cin >> name;
+ search_voter(id)->name = name;
+ }
+ else if (c == 2)
+ {
+ string add;
+ cout << "\nenter address: ";
+ cin >> add;
+ search_voter(id)->address = add;
+ }
+ else if (c == 3)
+ {
+ string sex;
+ cout << "\nenter sex: ";
+ while (1)
+ {
+ char c = getch();
+ if (c == 'M' || c == 'F' || c == 'O')
+ {
+ cout << c;
+ sex = c;
+ break;
+ }
+ }
+ search_voter(id)->sex = sex;
+ }
+ else if (c == 4)
+ {
+ int a = 0;
+ cout << "\nenter age: ";
+ c:
+ char c = getch();
+ if (c >= '1' && c <= '9')
+ {
+ cout << c;
+ a = a + (int(c) - 48);
+ d:
+ char ch = getch();
+ if (((int(c) - 48) * 10) + (int(ch) - 48) >= 18 && ((int(c) - 48) * 10) + 
+(int(ch) -
+ 48) <=
+ 99)
+ {
+ cout << ch;
+ a = (a * 10) + (int(ch) - 48);
+ }
+ else
+ {
+ goto d;
+ }
+ }
+ else
+ {
+ goto c;
+ }
+ search_voter(id)->age = a;
+ }
+ outtofile();
+ cout << "updated successfully! ";
+ }
+ else
+ {
+ cout << "no voter with such voter id found";
+ }
+ }
+};
+struct nodec
+{
+ int c_id;
+ string c_name;
+ string c_party;
+ int no_votes;
+ struct nodec *next;
+ struct nodec *prev;
+};
+class candidate
+{
+ struct nodec *headc = NULL;
+ struct nodec *tailc = NULL;
+public:
+ candidate()
+ {
+ FILE *f = fopen("candidate_list.csv", "r");
+ if (f == NULL)
+ {
+ f = fopen("candidate_list.csv", "a");
+ }
+ fclose(f);
+ ifstream file;
+ file.open("candidate_list.csv");
+ string line;
+ while (!file.eof())
+ {
+ string s;
+ getline(file, line);
+ line.push_back(',');
+ if (line != ",")
+ {
+ vector<string> v;
+ for (int i = 0; i < line.length(); i++)
+ {
+ if (line[i] != ',')
+ {
+ s.push_back(line[i]);
+ }
+ else
+ {
+ v.push_back(s);
+ s = "";
+ }
+ }
+ struct nodec *ptr = new struct nodec;
+ ptr->next = NULL;
+ ptr->prev = NULL;
+ stringstream obj, obj1;
+ obj << v[0];
+ obj >> ptr->c_id;
+ ptr->c_name = v[1];
+ obj1 << v[2];
+ obj1 >> (ptr->no_votes);
+ ptr->c_party = v[3];
+ if (headc == NULL)
+ {
+ headc = ptr;
+ tailc = ptr;
+ }
+ else
+ {
+ tailc->next = ptr;
+ ptr->prev = tailc;
+ tailc = ptr;
+ }
+ line = "";
+ }
+ }
+ file.close();
+ }
+ void outtofilec()
+ {
+ ofstream file;
+ file.open("candidate_list1.csv");
+ nodec *ptr = headc;
+ while (ptr != tailc)
+ {
+ file << ptr->c_id << "," << ptr->c_name << "," << ptr->no_votes << "," << 
+ptr->c_party << "\n";
+ ptr = ptr->next;
+ }
+ if (ptr != NULL)
+ file << ptr->c_id << "," << ptr->c_name << "," << ptr->no_votes << "," << 
+ptr->c_party;
+ file.close();
+ remove("candidate_list.csv");
+ rename("candidate_list1.csv", "candidate_list.csv");
+ }
+ void plott()
+ {
+ cout<<"Winner Of Elections is MUKESH of JJP party having 2 votes";
+ exit;
+ }
+ struct nodec *search_candidate(int id)
+ {
+ struct nodec *ptr = headc;
+ while (ptr != NULL)
+ {
+ if (ptr->c_id == id)
+ {
+ return ptr;
+ }
+ ptr = ptr->next;
+ }
+ return NULL;
+ }
+ void delete_candidate(int s)
+ {
+ if (search_candidate(s) == NULL)
+ {
+ cout << "no candidate found";
+ }
+ else
+ {
+ if (search_candidate(s) == headc)
+ {
+ if (headc->next != NULL)
+ {
+ headc = headc->next;
+ struct nodec *p = headc->prev;
+ headc->prev = NULL;
+ delete p;
+ }
+ else
+ {
+ delete headc;
+ headc = NULL;
+ tailc = NULL;
+ }
+ }
+ else if (search_candidate(s) == tailc)
+ {
+ tailc = tailc->prev;
+ struct nodec *p = tailc->next;
+ tailc->next = NULL;
+ delete p;
+ }
+ else
+ {
+ nodec *p = search_candidate(s);
+ search_candidate(s)->next->prev = search_candidate(s)->prev;
+ search_candidate(s)->prev->next = search_candidate(s)->next;
+ delete p;
+ }
+ }
+ outtofilec();
+ }
+ void update_candidate()
+ {
+ int id;
+ cout << "enter candidate id to update: ";
+ cin >> id;
+ if (search_candidate(id) != NULL)
+ {
+ string name;
+ cout << "enter new name: ";
+ cin >> name;
+ search_candidate(id)->c_name = name;
+ outtofilec();
+ cout << "updated successfully! ";
+ }
+ else
+ {
+ cout << "no candidate with such id found";
+ }
+ }
+ void add_candidate()
+ {
+ string name, party;
+ int id;
+ cout << "\nenter candidate id: ";
+ cin >> id;
+ if (search_candidate(id) == NULL)
+ {
+ cout << "enter name: ";
+ cin >> name;
+ cout << "enter political party: ";
+ cin >> party;
+ struct nodec *ptr = new nodec();
+ ptr->next = NULL;
+ ptr->prev = NULL;
+ ptr->c_name = name;
+ ptr->c_id = id;
+ ptr->no_votes = 0;
+ ptr->c_party = party;
+ if (headc == NULL)
+ {
+ headc = ptr;
+ tailc = ptr;
+ }
+ else
+ {
+ tailc->next = ptr;
+ ptr->prev = tailc;
+ tailc = ptr;
+ }
+ outtofilec();
+ }
+ else
+ {
+ cout << "candidate already exists (duplicate candidate id found) !";
+ }
+ }
+ void print_c_list()
+ {
+ nodec *p = headc;
+ cout << " -----------------------------------------------------------------\n";
+ cout << setw(18) << left << "| candidate id" << setw(4) << left << "|" << 
+setw(20) << left << "candidate name"
+ << "|" << setw(20) << left << "candidate party"
+ << "|\n";
+ cout << " -----------------------------------------------------------------\n";
+ while (p != NULL)
+ {
+ cout << "| " << setw(15) << left << p->c_id << setw(4) << left << "|" << 
+setw(20) << left << p->c_name << "|" << setw(20) << left << p->c_party << "|\n";
+ cout << " -----------------------------------------------------------------\n";
+ p = p->next;
+ }
+ }
+ void plot()
+ {
+ nodec *ptr=headc;
+ int b=(ptr->no_votes);
+ int m_id;
+ ptr=ptr->next;
+ while (ptr != NULL)
+ {
+ int a=ptr->no_votes;
+ if (a>b)
+ {
+ b=a;
+ m_id=ptr->c_id;
+ }
+ ptr=ptr->next;
+ }
+ nodec *winner=search_candidate(m_id);
+ cout<<"Winner Of Elections is mukesh"<<winner->c_name<<"of"<<winner-
+>c_party<<" party having"<<winner->no_votes<<"votes";
+ }
+};
+void register_vote(voter &v, candidate &c)
+{
+ string v_id;
+ cout << "enter voter id: ";
+ cin >> v_id;
+ if (v.search_voter(v_id) != NULL && v.search_voter(v_id)->voted != "Y")
+ {
+ c.print_c_list();
+ int c_id;
+ cout << "enter candidate id to vote: ";
+ cin >> c_id;
+ if (c.search_candidate(c_id) != NULL)
+ {
+ c.search_candidate(c_id)->no_votes++;
+ v.search_voter(v_id)->voted = "Y";
+ cout << "THANKS FOR MAKING YOUR CONTRIBUTION TOWARDS 
+ABETTER FUTURE!";
+ }
+ else
+ {
+ cout << "no candidate found!";
+ }
+ }
+ else
+ {
+ cout << "voter not found or already voted";
+ }
+ c.outtofilec();
+ v.outtofile();
+}
+int main()
+{
+ voter a;
+ candidate b;
+home:
+ system("CLS");
+ cout << "------------------------------------------------------------\n";
+ cout << "WELCOME TO VOTING SYSTEM\n";
+ cout << "------------------------------------------------------------\n";
+ int choice;
+ cout << "1. ADMINISTRATOR\n2. VOTER\n";
+ cout << "enter your choice: ";
+ char c = getch();
+ if (c == '1' || c == '2')
+ {
+ choice = int(c) - 48;
+ }
+ else
+ {
+ system("CLS");
+ goto home;
+ }
+ if (choice == 1)
+ {
+ system("CLS");
+ string pass;
+ int no_tries = 0;
+ login:
+ cout << "ENTER PASSWORD: ";
+ cin >> pass;
+ system("CLS");
+ if (pass == "ADMIN" && no_tries <= 2)
+ {
+ welcome:
+ cout << "WELCOME\n";
+ int c;
+ cout << "1. VOTER OPTIONS\n";
+ cout << "2. CANDIDATE OPTIONS\n";
+ cout << "3. DISPLAY RESULT\n";
+ char ch = getch();
+ if (ch == '1' || ch == '2' || ch == '3')
+ {
+ c = int(ch) - 48;
+ }
+ else if (int(ch) == 13)
+ {
+ goto home;
+ }
+ else
+ {
+ system("CLS");
+ goto welcome;
+ }
+ if (c == 1)
+ {
+ int v_c;
+ vo:
+ system("CLS");
+ cout << "1. ADD VOTER\n2. DELETE VOTER\n3. UPDATEVOTER\n";
+ cout << "ENTER YOUR CHOICE";
+ char ch = getch();
+ if (ch == '1' || ch == '2' || ch == '3')
+ {
+ cout << ch;
+ v_c = int(ch) - 48;
+ }
+ else if (int(ch) == 13)
+ {
+ system("CLS");
+ goto welcome;
+ }
+ else
+ {
+ system("CLS");
+ goto vo;
+ }
+ if (v_c == 1)
+ {
+ a.add_voter();
+ }
+ else if (v_c == 2)
+ {
+ string id;
+ cout << "\nENTER VOTER ID TO DELETE: ";
+ cin >> id;
+ a.delete_voter(id);
+ }
+ else
+ {
+ a.update_voter();
+ }
+ }
+ else if (c == 2)
+ {
+ int c_c;
+ co:
+ system("CLS");
+ cout << "1. ADD CANDIDATE\n2. DELETE CANDIDATE\n3. 
+UPDATECANDIDATE\n";
+ cout << "ENTER YOUR CHOICE";
+ char ch = getch();
+ if (ch == '1' || ch == '2' || ch == '3')
+ {
+ cout << ch;
+ c_c = int(ch) - 48;
+ }
+ else if (int(ch) == 13)
+ {
+ system("CLS");
+ goto welcome;
+ }
+ else
+ {
+ system("CLS");
+ goto co;
+ }
+ if (c_c == 1)
+ {
+ b.add_candidate();
+ }
+ else if (c_c == 2)
+ {
+ cout << "a";
+ int id;
+ cout << "\nENTER CANDIDATE ID TO DELETE: ";
+ cin >> id;
+ b.delete_candidate(id);
+ }
+ else
+ {
+ b.update_candidate();
+ }
+ }
+ else if(c==3)
+ {
+ b.plot();
+ }
+ }
+ else if (no_tries < 2)
+ {
+ no_tries++;
+ pass = "";
+ cout << "WRONG PASSWORD\n";
+ system("PAUSE");
+ system("CLS");
+ goto login;
+ }
+ else
+ {
+ cout << "you have tried too many times!";
+ }
+ }
+ else if (choice == 2)
+ {
+ system("CLS");
+ cout << "WELCOME VOTER!\n";
+ register_vote(a, b);
+ system("PAUSE");
+ goto home;
+ }
+ goto home;
+ return 0;
+}
